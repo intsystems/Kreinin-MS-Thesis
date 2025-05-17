@@ -1,0 +1,56 @@
+net:
+    spatial_dims: 2
+    init_filters: 64
+    in_channels: 1
+    out_channels: 1
+    dropout_prob: 0.0
+    norm: ["GROUP", {"num_groups": 16}]
+    num_groups: 16
+    use_conv_final: True
+    blocks_down: [2, 3, 4, 8, 8]
+    blocks_up: [2, 2, 2, 2]
+    upsample_mode: "nontrainable"
+    
+optimizer:
+    weight_decay: 0.000
+    optimizer: "Adam"
+    learning_rate: 0.00002
+    betas: [0.9, 0.999]
+    amsgrad: false
+    eps: 0.00000001
+
+hyperparams:
+    net_name: 'SegResNet'
+    grad_clip: 1.0
+    channels: 1
+    wandb_use: True
+    epochs: 30
+    device: 0
+    batch_size_train: 2
+    num_workers_train: 16
+    batch_size_test : 4
+    num_workers_test: 8
+    project: 'lol'
+    wandb_key: 'kek'
+
+files: '../data/split.data'
+path_in: '../data/npy'
+
+
+transform_test:
+    H: 512
+    W: 512
+
+transform_train:
+    H: 512
+    W: 512
+    RandFlipd: 
+        prob: 0.5
+    RandRotate90d:
+        prob: 0.5
+        max_k: 3
+    RandAffined:
+        prob: 0.7
+        rotate_range: 45
+        translate_range: [0.2, 0.2]
+        shear_range: 10

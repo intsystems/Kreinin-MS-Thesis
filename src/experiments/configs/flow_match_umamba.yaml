@@ -1,0 +1,59 @@
+net:
+    input_channels          : 2
+    n_stages                : 7
+    features_per_stage      : [128, 256, 256, 512, 512, 1024, 1024]
+    kernel_sizes            : [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]]
+    strides                 : [[1, 1], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]]
+    num_classes             : 1
+    deep_supervision        : False
+    n_conv_per_stage        : [2, 2, 2, 2, 2, 2, 2]
+    n_conv_per_stage_decoder: [2, 2, 2, 2, 2, 2]
+    conv_bias               : True
+    norm_op_kwargs          : {"eps": 0.00001, "affine": True}
+    dropout_op              : null
+    dropout_op_kwargs       : null
+    nonlin_kwargs           : {"inplace": True}
+
+optimizer:
+    weight_decay: 0.000
+    optimizer: "Adam"
+    learning_rate: 0.00002
+    betas: [0.9, 0.999]
+    amsgrad: false
+    eps: 0.00000001
+
+hyperparams:
+    net_name: 'UMambaBot'
+    grad_clip: 1.0
+    channels: 1
+    wandb_use: True
+    epochs: 30
+    device: 0
+    batch_size_train: 2
+    num_workers_train: 16
+    batch_size_test : 4
+    num_workers_test: 8
+    project: 'lol'
+    wandb_key: 'kek'
+
+files: '../data/split.data'
+path_in: '../data/npy'
+
+
+transform_test:
+    H: 512
+    W: 512
+
+transform_train:
+    H: 512
+    W: 512
+    RandFlipd: 
+        prob: 0.5
+    RandRotate90d:
+        prob: 0.5
+        max_k: 3
+    RandAffined:
+        prob: 0.7
+        rotate_range: 45
+        translate_range: [0.2, 0.2]
+        shear_range: 10
