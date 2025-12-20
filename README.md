@@ -56,6 +56,18 @@ We propose **TimeResNet** — a novel architecture with:
 - Self-Convolution Attention at the bottleneck
 - Group Normalization for training stability
 
+<p align="center">
+  <img src="slides/images/timeresnet.png" alt="TimeResNet Architecture" width="90%"/>
+</p>
+<p align="center"><em>TimeResNet Architecture</em></p>
+
+#### TimeResNetBlock with Time Embedding
+
+<p align="center">
+  <img src="slides/images/Embeding.png" alt="TimeResNetBlock" width="50%"/>
+</p>
+<p align="center"><em>Time embedding injection mechanism in ResNet block</em></p>
+
 ---
 
 ## 📊 Results
