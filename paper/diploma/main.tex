@@ -1,0 +1,49 @@
+\documentclass[14pt]{extarticle}
+
+\input{preamble}
+\input{newcommands}
+
+\begin{document}
+
+%%% Титульный лист
+\input{sections/title}
+\setcounter{page}{2}
+
+%%% Аннотация
+\newpage
+\input{sections/abstract}
+
+%%% Оглавление
+\newpage
+\tableofcontents
+
+%%% Введение
+\newpage
+\input{sections/introduction}
+
+%%% Обзор литературы
+\newpage
+\input{sections/literature}
+
+%%% Обозначения и математические основы
+\newpage
+\input{sections/notation}
+
+%%% Описание метода
+\newpage
+\input{sections/method}
+
+%%% Эксперименты
+\newpage
+\input{sections/experiments}
+
+%%% Заключение
+\newpage
+\input{sections/conclusion}
+
+%%% Список литературы
+\newpage
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}

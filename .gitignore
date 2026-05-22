@@ -152,3 +152,10 @@ outputs/
 *.tar
 *.tar.gz
 *.rar
+
+tasks/
+paper/cvpr_workshop/
+paper/eccv/
+paper/mipt/
+paper/nips/
+

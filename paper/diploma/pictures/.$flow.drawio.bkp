@@ -1,0 +1,205 @@
+<mxfile host="app.diagrams.net" version="27.0.5">
+  <diagram name="Page-1" id="flow-redesign-v2">
+    <mxGraphModel dx="1600" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="780" math="1" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;FlowMatching&lt;/b&gt;" style="text;strokeColor=none;fillColor=none;html=1;align=center;verticalAlign=middle;fontSize=40;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="10" width="500" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- INPUT bar -->
+        <mxCell id="input_bar" value="&lt;b&gt;I&lt;br&gt;N&lt;br&gt;P&lt;br&gt;U&lt;br&gt;T&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=28;verticalAlign=middle;align=center;fillColor=#f8f8f8;strokeColor=#888;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="50" height="300" as="geometry" />
+        </mxCell>
+
+        <!-- Encoder trapezoid -->
+        <mxCell id="encoder" value="" style="shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rotation=-90;size=100;direction=west;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="120" y="100" width="320" height="300" as="geometry" />
+        </mxCell>
+
+        <!-- Encoder label -->
+        <mxCell id="enc_label" value="&lt;b&gt;Encoder&lt;/b&gt;" style="text;strokeColor=none;fillColor=none;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="225" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Bottleneck -->
+        <mxCell id="bottleneck" value="&lt;b&gt;Bottleneck&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=32;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="475" y="160" width="200" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- Decoder trapezoid -->
+        <mxCell id="decoder" value="" style="shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rotation=-90;size=100;direction=east;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="710" y="100" width="320" height="300" as="geometry" />
+        </mxCell>
+
+        <!-- Decoder label -->
+        <mxCell id="dec_label" value="&lt;b&gt;Decoder&lt;/b&gt;" style="text;strokeColor=none;fillColor=none;html=1;align=center;verticalAlign=middle;fontSize=34;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="225" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- OUTPUT bar (proper rectangle now) -->
+        <mxCell id="output_bar" value="&lt;b&gt;O&lt;br&gt;U&lt;br&gt;T&lt;br&gt;P&lt;br&gt;U&lt;br&gt;T&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=28;verticalAlign=middle;align=center;fillColor=#f8f8f8;strokeColor=#888;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="100" width="50" height="300" as="geometry" />
+        </mxCell>
+
+        <!-- Skip connection 1 (outermost / full resolution) -->
+        <mxCell id="skip1" style="strokeColor=#b85450;strokeWidth=3;dashed=1;dashPattern=8 4;edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="170" y="100" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="170" y="74" />
+              <mxPoint x="980" y="74" />
+            </Array>
+            <mxPoint x="980" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Skip connection 2 -->
+        <mxCell id="skip2" style="strokeColor=#b85450;strokeWidth=3;dashed=1;dashPattern=8 4;edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="215" y="100" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="215" y="86" />
+              <mxPoint x="935" y="86" />
+            </Array>
+            <mxPoint x="935" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Skip connection 3 -->
+        <mxCell id="skip3" style="strokeColor=#b85450;strokeWidth=3;dashed=1;dashPattern=8 4;edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="265" y="100" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="265" y="62" />
+              <mxPoint x="885" y="62" />
+            </Array>
+            <mxPoint x="885" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Skip connection 4 (innermost) -->
+        <mxCell id="skip4" style="strokeColor=#b85450;strokeWidth=3;dashed=1;dashPattern=8 4;edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="315" y="100" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="315" y="50" />
+              <mxPoint x="835" y="50" />
+            </Array>
+            <mxPoint x="835" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Main flow: INPUT -> Encoder -->
+        <mxCell id="arrow_in_enc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2.5;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="input_bar" target="encoder" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Main flow: Encoder -> Bottleneck -->
+        <mxCell id="arrow_enc_btn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2.5;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="encoder" target="bottleneck" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Main flow: Bottleneck -> Decoder -->
+        <mxCell id="arrow_btn_dec" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2.5;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="bottleneck" target="decoder" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Main flow: Decoder -> OUTPUT -->
+        <mxCell id="arrow_dec_out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2.5;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="decoder" target="output_bar" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- v_target formula box -->
+        <mxCell id="vtarget_box" value="\(v_{\text{target}} = x_1 - x_0\)" style="text;strokeColor=#444;fillColor=#fffbe6;html=1;align=center;verticalAlign=middle;fontSize=28;dashed=1;dashPattern=8 4;rounded=1;whiteSpace=wrap;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="100" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Loss formula box -->
+        <mxCell id="loss_box" value="\(\mathcal{L} = \|\hat{v} - v_{\text{target}}\|_2^2\)" style="text;strokeColor=#444;fillColor=#fffbe6;html=1;align=center;verticalAlign=middle;fontSize=28;dashed=1;dashPattern=8 4;rounded=1;whiteSpace=wrap;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="320" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: OUTPUT -> Loss (down-right) -->
+        <mxCell id="arrow_out_loss" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2.5;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="output_bar" target="loss_box" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: v_target -> Loss (vertical, on left side) -->
+        <mxCell id="arrow_vtgt_loss" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2.5;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="vtarget_box" target="loss_box" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Input formula box (lower half) -->
+        <mxCell id="input_formula" value="\(x_t = (1{-}t)\,x_0 + t\,x_1\)&lt;br&gt;&lt;br&gt;\(\text{Input} = [\,x_t\,;\;x_{\text{src}}\,]\)" style="text;strokeColor=#444;fillColor=#eef7ff;html=1;align=center;verticalAlign=middle;fontSize=28;dashed=1;dashPattern=8 4;rounded=1;whiteSpace=wrap;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="55" y="520" width="540" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Sampling box (lower half) -->
+        <mxCell id="sampling_box" value="\(t \sim \mathcal{U}(0,1)\)" style="text;strokeColor=#444;fillColor=#eef7ff;html=1;align=center;verticalAlign=middle;fontSize=32;dashed=1;dashPattern=8 4;rounded=1;whiteSpace=wrap;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="630" y="520" width="260" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Sampling -> Input formula -->
+        <mxCell id="arrow_samp_input" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeWidth=2.5;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="sampling_box" target="input_formula" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Input formula -> INPUT bar (going up) -->
+        <mxCell id="arrow_formula_input" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2.5;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=classicThin;endFill=1;endSize=10;" edge="1" source="input_formula" target="input_bar" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="585" />
+              <mxPoint x="20" y="460" />
+              <mxPoint x="75" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend box -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#888;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="940" y="510" width="430" height="240" as="geometry" />
+        </mxCell>
+
+        <!-- Legend title -->
+        <mxCell id="legend_title" value="&lt;b&gt;Условные обозначения&lt;/b&gt;" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=middle;fontSize=28;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="520" width="380" height="38" as="geometry" />
+        </mxCell>
+
+        <!-- Legend: skip connection line -->
+        <mxCell id="leg_skip_line" style="strokeColor=#b85450;strokeWidth=3;dashed=1;dashPattern=8 4;html=1;endArrow=none;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="965" y="595" as="sourcePoint" />
+            <mxPoint x="1075" y="595" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg_skip_text" value="skip connection" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=middle;fontSize=32;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="578" width="260" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- Legend: connection line -->
+        <mxCell id="leg_conn_line" style="strokeColor=#000000;strokeWidth=2.5;html=1;endArrow=classicThin;endFill=1;endSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="965" y="660" as="sourcePoint" />
+            <mxPoint x="1075" y="660" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg_conn_text" value="connection" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=middle;fontSize=32;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="642" width="260" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- Legend: formula box example -->
+        <mxCell id="leg_fml_rect" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef7ff;strokeColor=#444;dashed=1;dashPattern=8 4;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="955" y="710" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_fml_text" value="auxiliary formula" style="text;strokeColor=none;fillColor=none;html=1;align=left;verticalAlign=middle;fontSize=32;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="706" width="260" height="36" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

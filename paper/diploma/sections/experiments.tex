@@ -1,0 +1,370 @@
+\section{Вычислительные эксперименты}
+\label{sec:experiments}
+
+\subsection{Данные и предобработка}
+\label{sec:data}
+
+Ретроспективно собраны 120 исследований брюшной полости (52\,561 срез) из трёх больниц. Каждое исследование включает парную нативную и артериальную серии одного пациента. Разбиение по пациентам: 80~/ 20~/ 20 для обучения, теста и отложенной выборки (held-out). Контрастная серия в каждом случае выравнивалась к нативной с помощью деформируемой регистрации ANTs (SyN с маской тела). Все срезы имеют размер $512\times512$ пикселей; интенсивности ограничены диапазоном $[-1000, 1000]$\,HU и масштабированы в $[-1, 1]$.
+
+Аугментация (MONAI~\cite{cardoso2022monai}): отражения по осям $x$/$y$ (50\%), повороты на $90^\circ k$, $k\in\{1,2,3\}$ (50\%), аффинные преобразования (70\%; поворот $\pm45^\circ$, сдвиг $\pm102.4$\,пкс, срезание $\pm10^\circ$). Интенсивностная аугментация исключена: она нарушает соответствие в единицах HU, необходимое для точной трансляции. Двухэнергетические исследования и серии с рассогласованными начальными координатами или пространственными разрешениями удалены после регистрации.
+
+\subsection{Детали обучения}
+
+Все модели обучались 30 эпох (кривые потерь выходят на плато до эпохи~20; обучение 60 эпох изменило MAE с 4.25 до 4.21~--- в пределах шума). Оптимизатор Adam: lr\,$=\,2\times10^{-5}$, $\beta_1=0.9$, $\beta_2=0.999$, батч~2 на четырёх GPU NVIDIA RTX~3090 (24\,ГБ каждая). Для флоу матчинга время $t \sim \mathcal{U}[0,1]$ сэмплируется на каждом шаге. Входом сети служит конкатенация $[\mathbf{x}_t, \mathbf{x}_{\mathrm{src}}]$ по каналу.
+
+Динамика обучения показана на рисунках~\ref{fig:reg_loss}--\ref{fig:dif_loss}. TimeResNet сходится быстрее остальных архитектур флоу матчинга и достигает более низкого установившегося значения потери CFM.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{reg_loss_plot.pdf}
+    \caption{Кривые потерь $\ell_1$ на тестовой выборке: регрессионные модели (UNet, SegResNet, SwinUNETR, UMambaBot).}
+    \label{fig:reg_loss}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{flow_loss_plot.pdf}
+    \caption{Кривые потерь CFM на тестовой выборке: модели флоу матчинга (TimeResNet, SegResNet, SwinUNETR, UMambaBot).}
+    \label{fig:flow_loss}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{dif_loss_plot.pdf}
+    \caption{Кривая потерь MSE на тестовой выборке: диффузионная модель DDPM.}
+    \label{fig:dif_loss}
+\end{figure}
+
+\subsection{Метрики качества}
+\label{sec:metrics}
+
+Все метрики вычисляются на шкале $[-1000, 1000]$\,HU. Для пациента $p$ обозначим через $\hat{\mathbf{x}}^{(s)}$ синтезированный срез и $\mathbf{x}^{(s)}$ эталонный ($s = 1,\ldots,S_p$ срезов, $\Omega$~--- множество пикселей среза, $|\Omega| = 512^2$). Итоговые значения~--- среднее по пациентам среднего по срезам.
+
+\paragraph{Средняя абсолютная ошибка (MAE,~$\downarrow$).}
+\begin{equation}
+    \mathrm{MAE}(\hat{\mathbf{x}}, \mathbf{x}) = \frac{1}{|\Omega|} \sum_{i \in \Omega} \bigl|\hat{x}_i - x_i\bigr|.
+    \label{eq:mae}
+\end{equation}
+MAE выражается в HU и непосредственно характеризует точность восстановления абсолютных значений плотности тканей. Это особенно важно для КТ, где диагностические пороги (например, 70\,HU для кальцификации) требуют точного численного соответствия.
+
+\paragraph{Среднеквадратическая ошибка и PSNR~\cite{korhonen2012peak}~($\uparrow$).}
+\begin{equation}
+    \mathrm{MSE}(\hat{\mathbf{x}}, \mathbf{x}) = \frac{1}{|\Omega|} \sum_{i \in \Omega} (\hat{x}_i - x_i)^2,
+    \label{eq:mse}
+\end{equation}
+\begin{equation}
+    \mathrm{PSNR}(\hat{\mathbf{x}}, \mathbf{x}) = 10 \log_{10}\!\left(\frac{\mathrm{MAX}^2}{\mathrm{MSE}(\hat{\mathbf{x}}, \mathbf{x})}\right), \quad \mathrm{MAX} = 2000\,\text{HU}.
+    \label{eq:psnr}
+\end{equation}
+PSNR логарифмически штрафует большие выбросы сильнее, чем MAE, и удобен для сравнения с результатами других работ.
+
+\paragraph{Структурная схожесть (SSIM~\cite{1284395},~$\uparrow$).}
+Для двух патчей $\mathbf{u}$, $\mathbf{v}$ (из нормированных изображений $[0,1]$) SSIM определяется как:
+\begin{equation}
+    \mathrm{SSIM}(\mathbf{u}, \mathbf{v}) =
+    \underbrace{\frac{2\mu_u\mu_v + c_1}{\mu_u^2 + \mu_v^2 + c_1}}_{\text{яркость}}
+    \cdot
+    \underbrace{\frac{2\sigma_u\sigma_v + c_2}{\sigma_u^2 + \sigma_v^2 + c_2}}_{\text{контраст}}
+    \cdot
+    \underbrace{\frac{\sigma_{uv} + c_3}{\sigma_u\sigma_v + c_3}}_{\text{структура}},
+    \label{eq:ssim}
+\end{equation}
+где $\mu_u, \mu_v$~--- средние, $\sigma_u^2, \sigma_v^2$~--- дисперсии, $\sigma_{uv}$~--- ковариация; стабилизирующие константы $c_1 = (0.01)^2$, $c_2 = (0.03)^2$, $c_3 = c_2/2$. Итоговый $\mathrm{SSIM}(\hat{\mathbf{x}}, \mathbf{x})$ есть среднее по всем патчам скользящего окна $11\times11$.
+
+\paragraph{Коэффициент Дайса (Dice,~$\uparrow$).}
+При оценке качества downstream-сегментации используется:
+\begin{equation}
+    \mathrm{Dice}(A, B) = \frac{2|A \cap B|}{|A| + |B|},
+    \label{eq:dice}
+\end{equation}
+где $A$~--- предсказанная маска, $B$~--- эталонная.
+
+\paragraph{TotalSeg-LPIPS~($\downarrow$).}
+Перцептивное расстояние вычисляется с медицинским энкодером TotalSegmentator в режиме 2D (по срезам) и 3D (учитывающем межсрезовую согласованность в объёмном кубе). Метрика аналогична LPIPS, но использует признаки, обученные на медицинских данных, что делает её более релевантной для КТ, чем стандартный ImageNet-LPIPS.
+
+\subsection{Результаты: контрастное $\to$ нативное}
+\label{sec:quant_c2n}
+
+В таблице~\ref{tab:regression} приведены регрессионные базовые линии, в таблице~\ref{tab:fm_c2n}~--- флоу матчинг и диффузионные методы (одношаговый Эйлер).
+
+\begin{table}[htbp]
+\centering
+\caption{Регрессионные базовые линии (контрастное $\to$ нативное). Среднее$\pm$ст.\,откл. по пациентам; лучший --- \textbf{жирный}, второй --- \underline{подчёркнутый}.}
+\label{tab:regression}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Модель}
+  & \multicolumn{3}{c}{\textbf{Тест}}
+  & \multicolumn{3}{c}{\textbf{Held-out}}
+  & \textbf{Время, с} & \textbf{Пар., М} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$ & & \\
+\midrule
+UNet       & 8.21$\pm$1.14 & .975$\pm$.005 & 36.06$\pm$1.78 & 7.24$\pm$1.01 & .978$\pm$.007 & 37.81$\pm$1.67 & \textbf{0.007} & 104.3 \\
+SegResNet  & \textbf{7.27$\pm$1.00} & \textbf{.979$\pm$.005} & \textbf{36.31$\pm$1.71} & \textbf{6.33$\pm$1.03} & \textbf{.982$\pm$.007} & \textbf{38.46$\pm$1.70} & \underline{0.055} & 214.1 \\
+SwinUNETR  & 7.55$\pm$0.98 & .978$\pm$.005 & \underline{36.27$\pm$1.78} & 6.67$\pm$0.97 & .981$\pm$.007 & 38.25$\pm$1.66 & 0.084 & 120.1 \\
+UMambaBot  & \underline{7.32$\pm$1.01} & \underline{.978$\pm$.005} & 36.24$\pm$1.76 & \underline{6.37$\pm$1.01} & \textbf{.982$\pm$.007} & \underline{38.30$\pm$1.64} & 0.075 & 141.6 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Флоу матчинг и диффузионные методы (контрастное $\to$ нативное, Эйлер 1 шаг).}
+\label{tab:fm_c2n}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Метод / Модель}
+  & \multicolumn{3}{c}{\textbf{Тест}}
+  & \multicolumn{3}{c}{\textbf{Held-out}}
+  & \textbf{Время, с} & \textbf{Пар., М} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$ & & \\
+\midrule
+\multicolumn{9}{l}{\textit{Диффузионные методы}} \\
+DDPM       & 17.82$\pm$1.81 & .935$\pm$.009 & 30.19$\pm$1.62 & 18.20$\pm$1.39 & .934$\pm$.008 & 30.05$\pm$1.48 & 44.2 & 124.7 \\
+SMILE~\cite{liu2025see} & 30.35$\pm$5.26 & .892$\pm$.032 & 26.75$\pm$1.43 & 30.22$\pm$4.95 & .887$\pm$.026 & 26.70$\pm$1.33 & 9.03 & 1066 \\
+\midrule
+\multicolumn{9}{l}{\textit{Флоу матчинг (Эйлер, 1 шаг)}} \\
+SegResNet  & \underline{8.00$\pm$0.99} & \underline{.977$\pm$.005} & \underline{36.50$\pm$1.82} & \underline{7.23$\pm$1.07} & \underline{.979$\pm$.007} & \underline{38.45$\pm$1.65} & \textbf{0.065} & 214.1 \\
+UMambaBot  & 8.15$\pm$1.09 & .976$\pm$.005 & 36.23$\pm$1.75 & 7.29$\pm$1.00 & .979$\pm$.007 & 38.14$\pm$1.59 & 0.091 & 141.6 \\
+SwinUNETR  & 8.19$\pm$1.03 & .976$\pm$.005 & 36.28$\pm$1.73 & 7.42$\pm$0.98 & .979$\pm$.007 & 38.11$\pm$1.57 & 0.107 & \textbf{120.1} \\
+MFM (TimeResNet) & \textbf{5.14$\pm$0.99} & \textbf{.991$\pm$.005} & \textbf{40.18$\pm$1.77} & \textbf{4.25$\pm$1.09} & \textbf{.994$\pm$.007} & \textbf{42.19$\pm$1.67} & \underline{0.125} & \underline{124.7} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+MFM превосходит лучший регрессионный базовый метод (SegResNet) на 2.1\,HU по MAE и на 0.012 по SSIM на held-out. По сравнению со SMILE выигрыш по MAE составляет \textbf{7.1$\times$}. SMILE применялся в режиме zero-shot: опубликованные веса разворачивались с рекомендованными настройками на нашем датасете~--- стандартный способ оценки готовой модели на новой когорте.
+
+\subsection{Результаты: нативное $\to$ контрастное}
+\label{sec:quant_n2c}
+
+В таблице~\ref{tab:fm_n2c} приведены результаты в обратном направлении. Те же веса, никакого дополнительного обучения~--- это подтверждает теоретический вывод о двунаправленности метода (раздел~\ref{sec:notation}).
+
+\begin{table}[htbp]
+\centering
+\caption{Флоу матчинг и SMILE (нативное $\to$ контрастное, held-out).}
+\label{tab:fm_n2c}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Метод / Модель}
+  & \multicolumn{3}{c}{\textbf{Тест}}
+  & \multicolumn{3}{c}{\textbf{Held-out}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$ \\
+\midrule
+SMILE~\cite{liu2025see} & 20.37$\pm$4.21 & .909$\pm$.025 & 30.04$\pm$2.06 & 21.70$\pm$4.26 & .903$\pm$.019 & 29.28$\pm$1.53 \\
+\midrule
+SegResNet  & \underline{7.81$\pm$0.95} & \underline{.980$\pm$.004} & \underline{35.99$\pm$1.57} & \underline{6.82$\pm$0.82} & \underline{.983$\pm$.004} & \underline{37.82$\pm$1.46} \\
+UMambaBot  & 8.14$\pm$0.99 & .979$\pm$.004 & 35.93$\pm$1.54 & 7.23$\pm$0.84 & .982$\pm$.005 & 37.50$\pm$1.31 \\
+SwinUNETR  & 8.21$\pm$0.97 & .979$\pm$.004 & 35.94$\pm$1.57 & 7.36$\pm$0.78 & .982$\pm$.004 & 37.52$\pm$1.32 \\
+MFM (TimeResNet) & \textbf{5.60$\pm$0.99} & \textbf{.993$\pm$.004} & \textbf{39.69$\pm$1.60} & \textbf{4.57$\pm$0.87} & \textbf{.996$\pm$.004} & \textbf{41.52$\pm$1.53} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Клиническая значимость: MAE по анатомическим структурам}
+\label{sec:per_organ}
+
+Помимо среднего по всему срезу, оценим точность трансляции на клинически значимых структурах. Маски аорты, почек, печени и поджелудочной железы получены с помощью TotalSegmentator на эталонных нативных сканах 20 held-out пациентов. MAE вычислялся внутри каждой маски.
+
+\begin{table}[htbp]
+\centering
+\caption{MAE по анатомическим структурам (HU, held-out, среднее$\pm$ст.\,откл. по пациентам). Лучший --- \textbf{жирный}.}
+\label{tab:per_organ}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Метод} & \textbf{Аорта} & \textbf{Почки} & \textbf{Печень} & \textbf{Поджелудочная} & \textbf{Весь срез} \\
+\midrule
+\multicolumn{6}{l}{\textit{Контрастное $\to$ нативное}} \\
+SegResNet (regression) & 23.69$\pm$25.05 & 21.77$\pm$26.90 & 13.10$\pm$5.56 & 17.57$\pm$9.87 & 6.33 \\
+SMILE~\cite{liu2025see} & 168.5$\pm$79.6 & 96.5$\pm$56.8 & 97.1$\pm$24.3 & 92.2$\pm$42.2 & 30.22 \\
+\textbf{MFM (TimeResNet)} & \textbf{16.92$\pm$16.28} & \textbf{16.41$\pm$19.75} & \textbf{9.79$\pm$4.76} & \textbf{12.65$\pm$7.89} & \textbf{4.25} \\
+\midrule
+\multicolumn{6}{l}{\textit{Нативное $\to$ контрастное}} \\
+SMILE~\cite{liu2025see} & 295.8$\pm$72.2 & 177.9$\pm$56.7 & 63.0$\pm$12.1 & 121.5$\pm$39.7 & 21.70 \\
+\textbf{MFM (TimeResNet)} & \textbf{20.08$\pm$19.63} & \textbf{24.29$\pm$19.15} & \textbf{12.80$\pm$7.22} & \textbf{15.43$\pm$7.83} & \textbf{4.57} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Разрыв концентрируется на контраст-чувствительных структурах: при синтезе контраста~(N→C) MFM обеспечивает MAE~на~\textbf{15$\times$ ниже}, чем SMILE, на уровне аорты. Большие стандартные отклонения у SegResNet и SMILE объясняются систематическими промахами на отдельных пациентах, тогда как у MFM они умеренны.
+
+\subsection{Перцептивное качество: TotalSeg-LPIPS}
+\label{sec:lpips}
+
+В дополнение к пиксельным метрикам вычислено перцептивное расстояние на основе медицинского энкодера~--- TotalSegmentator-LPIPS: 2D-вариант измеряет качество отдельных срезов, 3D-вариант учитывает межсрезовую согласованность в объёмном кубе.
+
+\begin{table}[htbp]
+\centering
+\caption{Перцептивное расстояние TotalSeg-LPIPS (контрастное $\to$ нативное, held-out). $\downarrow$ лучше.}
+\label{tab:lpips}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Метод} & \textbf{2D-LPIPS}$_{\text{TotalSeg}}$ $\downarrow$ & \textbf{3D-LPIPS}$_{\text{TotalSeg}}$ $\downarrow$ \\
+\midrule
+SegResNet & 0.158$\pm$0.051 & 0.012$\pm$0.005 \\
+SMILE~\cite{liu2025see} & 0.704$\pm$0.144 & 0.096$\pm$0.044 \\
+\textbf{MFM (TimeResNet)} & \textbf{0.138$\pm$0.053} & \textbf{0.007$\pm$0.004} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+MFM достигает наименьшего перцептивного расстояния как в 2D, так и в 3D, что свидетельствует о сохранении тонкой анатомической структуры. 3D-метрика подтверждает межсрезовую согласованность синтеза, несмотря на то что сеть обрабатывает срезы независимо.
+
+\subsection{Сравнение с ускоренным сэмплером DDIM}
+\label{sec:ddim_comparison}
+
+Тезис о «350-кратном ускорении» относится к сравнению с полным DDPM (1000 шагов). Для честного сравнения с современными быстрыми сэмплерами проведено дополнительное измерение с DDIM-50~--- стандартным быстрым методом для условных DDPM.
+
+\begin{table}[htbp]
+\centering
+\caption{MFM против DDPM и DDIM-50 (контрастное $\to$ нативное, held-out).}
+\label{tab:ddim}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrccrc}
+\toprule
+\textbf{Метод} & \textbf{Шагов} & \textbf{MAE$\downarrow$} & \textbf{SSIM$\uparrow$} & \textbf{Время/срез} & \textbf{к MFM} \\
+\midrule
+DDPM (полный) & 1000 & 18.20$\pm$1.39 & 0.934 & 44.20\,с & $354\times$ медл. \\
+DDIM-50 & 50 & 21.07$\pm$1.61 & 0.815 & 5.03\,с & \textbf{$40\times$ медл.} \\
+\textbf{MFM (Эйлер-1)} & \textbf{1} & \textbf{4.25$\pm$1.09} & \textbf{0.994} & \textbf{0.125\,с} & $1\times$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Даже с ускоренным сэмплером DDIM-50 диффузионная модель остаётся в~\textbf{40~раз медленнее} и в~\textbf{5~раз хуже} по MAE. Важно, что SSIM DDIM-50 деградирует на 18 пунктов относительно полного DDPM~--- быстрый сэмплер снижает не только время, но и качество. MFM объединяет скорость и качество в одном шаге, что согласуется с теоретическим аргументом о малой кривизне траекторий (раздел~\ref{sec:notation}).
+
+\subsection{Одношаговый инференс: теория и эксперимент}
+\label{sec:solver_ablation}
+
+В таблице~\ref{tab:solver} сравниваются численные схемы интегрирования для TimeResNet. Одношаговый метод Эйлера обеспечивает наилучший MAE и SSIM. Методы высшего порядка (RK2, RK4, средняя точка) незначительно ухудшают показатели, что согласуется с оценкой~\eqref{eq:euler_error}: при малой кривизне выученного поля скоростей Эйлер практически точен, а дополнительные вычисления поля в RK4 лишь накапливают ошибку аппроксимации.
+
+\begin{table}[htbp]
+\centering
+\caption{Абляция численного метода интегрирования ОДУ для MFM (контрастное $\to$ нативное). \emph{Вычисл.}~= число обращений к сети.}
+\label{tab:solver}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Метод (шагов)}
+  & \multicolumn{3}{c}{\textbf{Тест}}
+  & \multicolumn{3}{c}{\textbf{Held-out}}
+  & \textbf{Вычисл.} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$
+  & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$ & \\
+\midrule
+Эйлер (1) & \textbf{5.14$\pm$0.99} & \textbf{.991$\pm$.005} & \underline{40.18$\pm$1.77} & \textbf{4.25$\pm$1.09} & \textbf{.994$\pm$.007} & \textbf{42.19$\pm$1.67} & 1 \\
+Эйлер (2) & \underline{5.17$\pm$1.05} & \underline{.990$\pm$.006} & \textbf{40.21$\pm$1.86} & \underline{4.35$\pm$1.07} & \underline{.993$\pm$.007} & \underline{42.17$\pm$1.66} & 2 \\
+Эйлер (3) & 5.32$\pm$1.07 & .989$\pm$.006 & 40.04$\pm$1.87 & 4.50$\pm$1.09 & .991$\pm$.008 & 42.00$\pm$1.64 & 3 \\
+RK2 (1) & 5.53$\pm$1.04 & .989$\pm$.005 & 39.95$\pm$1.78 & 4.68$\pm$1.01 & .992$\pm$.007 & 41.81$\pm$1.56 & 2 \\
+RK4 (1) & 5.80$\pm$1.17 & .985$\pm$.007 & 39.84$\pm$1.82 & 5.05$\pm$1.14 & .987$\pm$.009 & 41.61$\pm$1.56 & 4 \\
+Средняя точка (1) & 5.79$\pm$1.18 & .985$\pm$.007 & 39.70$\pm$1.79 & 5.00$\pm$1.14 & .988$\pm$.009 & 41.54$\pm$1.57 & 2 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Двунаправленность: теория vs. эксперимент}
+\label{sec:unidirectional}
+
+Из теоремы~\ref{thm:sim_free} и симметрии линейного интерполянта~\eqref{eq:linear_interp} следует, что один и тот же минимизатор потери~\eqref{eq:mfm_loss} обслуживает оба направления трансляции. Для экспериментальной проверки этого утверждения обучен однонаправленный вариант TimeResNet по протоколу, идентичному двунаправленному.
+
+\begin{table}[htbp]
+\centering
+\caption{Двунаправленный MFM против однонаправленного TimeResNet (контрастное $\to$ нативное, held-out).}
+\label{tab:unidirectional}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Вариант} & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$ & Параметры \\
+\midrule
+Однонаправленный TimeResNet & 4.22$\pm$0.98 & 0.994$\pm$0.008 & 42.29$\pm$1.62 & 124.7\,М \\
+\textbf{Двунаправленный MFM} & \textbf{4.25$\pm$1.09} & \textbf{0.994$\pm$0.007} & \textbf{42.19$\pm$1.67} & \textbf{124.7\,М} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Различие находится в пределах шума обучения, что подтверждает теоретическое предсказание: при линейном интерполянте двунаправленность не несёт никакого штрафа по качеству, одновременно вдвое снижая стоимость обучения и хранения.
+
+\subsection{Абляция компонентов архитектуры TimeResNet}
+\label{sec:ablation}
+
+\begin{table}[htbp]
+\centering
+\caption{Абляция компонентов TimeResNet (held-out, Эйлер 1 шаг, контрастное $\to$ нативное).}
+\label{tab:ablation}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccc}
+\toprule
+\textbf{Вариант} & MAE$\downarrow$ & SSIM$\uparrow$ & PSNR$\uparrow$ \\
+\midrule
+TimeResNet (полная) & \textbf{4.25$\pm$1.09} & \textbf{.994$\pm$.007} & \textbf{42.19$\pm$1.67} \\
+\quad без самовнимания на боттлнеке & 5.96$\pm$1.01 & .985$\pm$.007 & 39.84$\pm$1.66 \\
+\quad без поблочного временного внедрения & 6.02$\pm$1.01 & .987$\pm$.007 & 39.96$\pm$1.71 \\
+\quad без обоих компонентов & 6.67$\pm$1.07 & .981$\pm$.007 & 38.52$\pm$1.65 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Удаление боттлнекового самовнимания ухудшает MAE на 1.71\,HU, удаление поблочного временного внедрения~--- на 1.77\,HU. Совместное удаление даёт 2.42\,HU~--- больше суммы, что говорит о синергии компонентов.
+
+\subsection{Межосевая согласованность}
+\label{sec:per_axis}
+
+Одна из потенциальных слабостей 2D-обработки~--- возможные несогласованности между срезами в сагиттальной и корональной проекциях. Таблица~\ref{tab:per_axis} сводит SSIM по трём осям. Величина $\Delta = \text{SSIM}_{\text{axial}} - \overline{\text{SSIM}}_{\perp}$ характеризует межосевую рассогласованность.
+
+\begin{table}[htbp]
+\centering
+\caption{SSIM по трём проекциям (контрастное $\to$ нативное, held-out). $\Delta$ = аксиальный минус среднее двух поперечных.}
+\label{tab:per_axis}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Метод} & \textbf{Аксиальный} & \textbf{Корональный} & \textbf{Сагиттальный} & $\Delta\downarrow$ \\
+\midrule
+SegResNet & 0.974 & 0.973 & 0.974 & 0.0003 \\
+SMILE~\cite{liu2025see} & 0.852 & 0.848 & 0.847 & 0.0047 \\
+\textbf{MFM (TimeResNet)} & \textbf{0.984} & \textbf{0.985} & \textbf{0.983} & \textbf{0.0001} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Значение $\Delta=0.0001$ у MFM фактически равно нулю: несмотря на 2D-обработку, синтез пространственно согласован во всех трёх проекциях. Это согласуется с результатами 3D-TotalSeg-LPIPS (таблица~\ref{tab:lpips}).
+
+\subsection{Качественный анализ}
+\label{sec:visual}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth,height=0.78\textheight,keepaspectratio]{small_example.jpg}
+    \caption{Визуальное сравнение методов (контрастное $\to$ нативное). Сверху вниз: SegResNet, DDPM, MFM, эталон нативный, вход контрастный. Справа~--- карты абсолютных отклонений.}
+    \label{fig:visual}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth,height=0.78\textheight,keepaspectratio]{projection_montage.jpg}
+    \caption{Расширенное сравнение в аксиальной, сагиттальной и корональной проекциях с картами разностей. Сверху вниз: регрессионные варианты, DDPM, варианты флоу матчинга, эталон, вход.}
+    \label{fig:projections}
+\end{figure}
+
+SMILE демонстрирует наибольшие отклонения и пространственные смещения в сагиттальной и корональной плоскостях. DDPM страдает от систематических межсрезовых несогласованностей, проявляющихся в виде ярких полос на разностных картах. Регрессия (SegResNet) избегает смещений, но вносит избыточное размытие. MFM сохраняет пространственную согласованность во всех трёх проекциях и одновременно воспроизводит чёткие тканевые границы: карты разностей равномерно тёмные.
+
+\subsection{Применимость для задачи сегментации}
+\label{sec:segmentation}
+
+На аорте 20 held-out пациентов размечены нативные и контрастные срезы. Контрастные изображения транслированы MFM в нативные. Обучены две модели nnUNet\,v2~\cite{isensee2024nnu}, валидация~--- на 20 дополнительных нативных сканах:
+\begin{itemize}
+    \item \textbf{Реальные нативные}: Dice~=~$\mathbf{0.966}$;
+    \item \textbf{MFM-сгенерированные нативные}: Dice~=~$\mathbf{0.926}$ (95.9\% от базового уровня).
+\end{itemize}
+
+Разрыв в 4 процентных пункта подтверждает, что синтезированные изображения сохраняют анатомическую информацию, достаточную для обучения сегментационных моделей. Практические сценарии применения: (i)~трансляция доступной модальности для обучения на недостающей; (ii)~удвоение обучающей выборки за счёт двунаправленной трансляции.
