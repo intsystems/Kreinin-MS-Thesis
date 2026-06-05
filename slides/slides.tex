@@ -432,10 +432,7 @@ TimeResNet & $\mathbf{4.25}$ & $\mathbf{.994}$ & $\mathbf{42.19}$ \\
       \item \textbf{Сохранение временн\'{о}го сигнала}: при $\mathcal{M}_l(\mathbf{h}; t) = \mathbf{A}_l(t)\odot\mathbf{h} + \mathbf{B}_l(t)$ выполнено $\partial\mathcal{L}/\partial t \neq 0$ на всех глубинах $l = 1, \ldots, L$;
       \item \textbf{Сложность боттлнекового self-attention}: $\mathcal{O}(N_{\mathrm{bottle}}^2 C)$, в $4^{2k}$ раз дешевле полноразмерного.
   \end{itemize}
-
-  \item \textbf{Утверждение об одношаговом инференсе}: при линейном интерполянте ускорение траектории $C_2 = 0$, поэтому глобальная ошибка Эйлера $e_N \le (\delta/L)(e^L - 1)$ определяется лишь качеством аппроксимации сетью.
 \end{enumerate}
-
 \end{frame}
 % --------------------------------------------------------------------
 
