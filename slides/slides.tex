@@ -55,9 +55,12 @@
 
 \title{Flow Matching для трансляции КТ изображений}
 \author{М.\,В.~Крейнин, А.\,В.~Грабовой}
-\institute[МФТИ]{Московский физико-технический институт \\
-Факультет управления и прикладной математики}
-\date{Москва \\ 2026~г}
+\institute[МФТИ]{
+  Кафедра интеллектуальных систем ФПМИ МФТИ \\
+  Специализация: Интеллектуальный анализ данных \\
+  Направление: 09.04.01 Информатика и вычислительная техника
+}
+\date{Москва, 2026}
 
 % ====================================================================
 \begin{document}
@@ -82,7 +85,7 @@
 
 \begin{exampleblock}{Предлагаемое решение}
 Фреймворк \textbf{Medical Flow Matching (MFM)} с архитектурой \textbf{TimeResNet}:
-инъекция временн\'{о}го параметра в каждый блок и свёрточный self-attention в узком горлышке.
+инъекция временного параметра в каждый блок и свёрточный self-attention в узком горлышке.
 \end{exampleblock}
 
 \end{frame}
@@ -197,12 +200,11 @@ $W_Q, W_K, W_V$ --- свёртки $1{\times}1$, $N = H' \!\cdot\! W'$.
 \begin{frame}{Свойства архитектуры TimeResNet}
 \small
 
-\begin{prop}[Сохранение временн\'{о}го сигнала]
-При per-block injection:
+\begin{prop}[Сохранение временного сигнала]
+При per-block injection временной сигнал имеет прямой ненулевой канал на каждой глубине:
 \[
-  \frac{\partial \mathcal{L}}{\partial t} = \sum_{l=1}^{L} \frac{\partial \mathcal{L}}{\partial \mathbf{h}_l} \cdot \frac{\partial \mathcal{M}_l(\mathbf{h}_l; t)}{\partial t} \neq 0, \qquad \forall\, l = 1, \ldots, L.
+  \frac{\partial \mathcal{L}}{\partial t} = \sum_{l=1}^{L} \frac{\partial \mathcal{L}}{\partial \mathbf{h}_l} \cdot \frac{\partial \mathcal{M}_l}{\partial t} \neq 0, \qquad \frac{\partial \mathcal{M}_l}{\partial t} \neq 0 \;\; \forall\, l.
 \]
-При input-level concatenation: $\partial \mathbf{h}_l / \partial t = 0$ для $l > 1$.
 \end{prop}
 
 \begin{prop}[Вычислительная сложность self-attention]
@@ -429,10 +431,20 @@ TimeResNet & $\mathbf{4.25}$ & $\mathbf{.994}$ & $\mathbf{42.19}$ \\
 
   \item Архитектура \textbf{TimeResNet} с теоретически обоснованными компонентами:
   \begin{itemize}\setlength{\itemsep}{0pt}
-      \item \textbf{Сохранение временн\'{о}го сигнала}: при $\mathcal{M}_l(\mathbf{h}; t) = \mathbf{A}_l(t)\odot\mathbf{h} + \mathbf{B}_l(t)$ выполнено $\partial\mathcal{L}/\partial t \neq 0$ на всех глубинах $l = 1, \ldots, L$;
+      \item \textbf{Сохранение временного сигнала}: при $\mathcal{M}_l(\mathbf{h}; t) = \mathbf{A}_l(t)\odot\mathbf{h} + \mathbf{B}_l(t)$ выполнено $\partial\mathcal{L}/\partial t \neq 0$ на всех глубинах $l = 1, \ldots, L$;
       \item \textbf{Сложность боттлнекового self-attention}: $\mathcal{O}(N_{\mathrm{bottle}}^2 C)$, в $4^{2k}$ раз дешевле полноразмерного.
   \end{itemize}
 \end{enumerate}
+
+
+
+\begin{block}{Доклады по теме работы}
+\begin{enumerate}
+  \item Выступление на конференции МФТИ 2026
+  \item Смежная работа подана на рецензируемый workshop CVPR 2026
+\end{enumerate}
+\end{block}
+
 \end{frame}
 % --------------------------------------------------------------------
 
